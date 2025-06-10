@@ -52,7 +52,7 @@ def process_and_store_data(api_data):
             print(f"    - Found {len(series_raw_data)} total points, processing the last {len(last_30_points)}.")
             
             points_processed_for_metric = 0
-            for log_entry in last_30_points:
+            for log_entry in last_500_points:
                 try:
                     date_str, value = log_entry[0], log_entry[1]
                     if value is None:
