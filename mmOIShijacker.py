@@ -48,11 +48,11 @@ def process_and_store_data(api_data):
             current_metric_id = METRIC_IDS[i]
             print(f"  Processing metric: {current_metric_id}")
 
-            last_500_points = series_raw_data[-500:]
-            print(f"    - Found {len(series_raw_data)} total points, processing the last {len(last_500_points)}.")
+            last_3_points = series_raw_data[-3:]
+            print(f"    - Found {len(series_raw_data)} total points, processing the last {len(last_3_points)}.")
             
             points_processed_for_metric = 0
-            for log_entry in last_500_points:
+            for log_entry in last_3_points:
                 try:
                     date_str, value = log_entry[0], log_entry[1]
                     if value is None:
