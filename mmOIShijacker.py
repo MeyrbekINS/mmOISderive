@@ -13,7 +13,7 @@ from playwright_stealth import stealth_async
 import cloudscraper
 
 # --- Configuration (Pulled from Environment Variables) ---
-DYNAMODB_TABLE_NAME = os.environ.get('DYNAMODB_TABLE_NAME', 'MacroMicroData')
+DYNAMODB_TABLE_NAME = os.environ.get('DYNAMODB_TABLE_NAME', 'MM_OIS')
 AWS_TARGET_REGION = os.environ.get('AWS_REGION', 'eu-north-1')
 METRIC_IDS_STR = os.environ.get(
     'METRIC_IDS', 
