@@ -1,22 +1,30 @@
 version: 0.2
 
-phases:
-  install:
-    runtime-versions:
-      python: 3.11
-    commands:
-      # The playwright install command downloads the necessary browser binaries (Chromium)
-      # into the environment where the script will run.
-      - echo "Installing dependencies..."
-      - pip install -r requirements.txt
-      - playwright install chromium
+env:
+  variables:
+    AWS_ACCOUNT_ID: "305362906248"       # <-- Replace with your AWS Account ID
+    IMAGE_REPO_NAME: "mm-ois-fetcher"   # <-- Replace with your desired ECR repository name
+    IMAGE_TAG: "latest"
+    AWS_DEFAULT_REGION: "eu-north-1"             # <-- Replace with your AWS region
 
+phases:
+  pre_build:
+    commands:
+      - echo "Logging in to Amazon ECR..."
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+      # Create ECR repository if it doesn't exist (optional, but good for first run)
+      - |
+        aws ecr describe-repositories --repository-names $IMAGE_REPO_NAME --region $AWS_DEFAULT_REGION > /dev/null 2>&1 || \
+        aws ecr create-repository --repository-name $IMAGE_REPO_NAME --region $AWS_DEFAULT_REGION --image-scanning-configuration scanOnPush=true --image-tag-mutability MUTABLE > /dev/null
   build:
     commands:
-      # The main event. CodeBuild will run your python script.
-      - echo "Starting the data pull script..."
-      - mmOIShijacker.py 
-
-artifacts:
-  # We don't need to produce any output files, so this can be minimal
-  files: []
+      - echo "Build started on `date`"
+      - echo "Building the Docker image..."
+      - docker build -t $IMAGE_REPO_NAME:$IMAGE_TAG .
+      - docker tag $IMAGE_REPO_NAME:$IMAGE_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
+  post_build:
+    commands:
+      - echo "Build completed on `date`"
+      - echo "Pushing the Docker image to ECR..."
+      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
+      - echo "Docker image pushed successfully."
