@@ -1,0 +1,22 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      python: 3.11 # Or your preferred Python version
+    commands:
+      # The playwright install command downloads the necessary browser binaries (Chromium)
+      # into the environment where the script will run.
+      - echo "Installing dependencies..."
+      - pip install -r requirements.txt
+      - playwright install chromium
+
+  build:
+    commands:
+      # The main event. CodeBuild will run your python script.
+      - echo "Starting the data pull script..."
+      - python your_script_name.py # IMPORTANT: Replace with your actual .py file name
+
+artifacts:
+  # We don't need to produce any output files, so this can be minimal
+  files: []
