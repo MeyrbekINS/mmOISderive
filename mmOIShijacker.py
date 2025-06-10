@@ -48,7 +48,7 @@ def process_and_store_data(api_data):
             current_metric_id = METRIC_IDS[i]
             print(f"  Processing metric: {current_metric_id}")
 
-            last_30_points = series_raw_data[-3:]
+            last_3_points = series_raw_data[-3:]
             print(f"    - Found {len(series_raw_data)} total points, processing the last {len(last_30_points)}.")
             
             points_processed_for_metric = 0
