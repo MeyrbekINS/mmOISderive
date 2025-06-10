@@ -109,7 +109,8 @@ def fetch_data_with_credentials(bearer_token, cookies):
 
 def process_and_store_data(api_data):
     """
-    Parses the JSON data from the API, formats it, and stores it in DynamoDB.
+    Parses the JSON data from the API, takes only the last 30 data points for each series,
+    formats them, and stores them in DynamoDB.
     """
     print("\n--- Stage 3: Processing and Storing Data in DynamoDB ---")
     
@@ -133,38 +134,34 @@ def process_and_store_data(api_data):
 
             current_metric_id = METRIC_IDS[i]
             print(f"  Processing metric: {current_metric_id}")
+
+            # --- KEY CHANGE HERE ---
+            # Take only the last 30 data points from the list provided by the API
+            last_30_points = series_raw_data[-30:]
+            print(f"    - Found {len(series_raw_data)} total points, processing the last {len(last_30_points)}.")
+            # --- END OF KEY CHANGE ---
             
-            # Decide whether to fetch all data or just recent data
-            # For a daily full refresh, processing all points is robust.
-            # To only add the latest, you'd need to check the last stored timestamp.
-            # Let's process all points for simplicity and robustness.
             points_processed_for_metric = 0
-            for log_entry in series_raw_data:
+            # Iterate over the sliced list, not the full list
+            for log_entry in last_30_points:
                 try:
                     # log_entry is a list: ["YYYY-MM-DD", value]
                     date_str = log_entry[0]
                     value = log_entry[1]
 
-                    # Skip entries where value is null
                     if value is None:
                         continue
 
-                    # Convert date string to a datetime object at midnight UTC
                     dt_object = datetime.strptime(date_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
-                    # Convert to UTC millisecond epoch timestamp for DynamoDB sort key
                     timestamp_ms = int(dt_object.timestamp() * 1000)
-
-                    # Use Decimal for floating point numbers to maintain precision in DynamoDB
                     value_decimal = decimal.Decimal(str(value))
 
-                    # Prepare the item for DynamoDB
                     item_to_store = {
                         'metricId': current_metric_id,
                         'timestamp': timestamp_ms,
                         'value': value_decimal
                     }
                     
-                    # Add the item to the batch
                     batch.put_item(Item=item_to_store)
                     points_processed_for_metric += 1
 
